@@ -29,6 +29,10 @@ app.use('/api/audit', auditRoutes);      // Your audit tracking
 app.use('/api/groups', groupRoutes);     // Group create, join, edit, etc.
 app.use('/api/runs', runRoutes);         // Run routes
 app.use('/api/coach', coachRoutes);
+app.get('/', (req, res) => {
+  res.send('MakeDaRun Backend is live 🏃‍♂️');
+});
+
 
 // Error handling middleware (must come AFTER routes)
 app.use(notFound);       // Handles 404s for unknown routes
