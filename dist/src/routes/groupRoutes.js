@@ -18,6 +18,7 @@ const Run_1 = __importDefault(require("../models/Run"));
 const User_1 = __importDefault(require("../models/User"));
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const groupController_1 = require("../controllers/groupController");
+const json2csv_1 = require("json2csv");
 const router = express_1.default.Router();
 // ✅ Create a new group (Coach only)
 router.post('/create', authMiddleware_1.protect, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -240,4 +241,45 @@ router.post('/leave', authMiddleware_1.protect, (req, res) => __awaiter(void 0, 
 }));
 router.get('/coach/groups', authMiddleware_1.protect, groupController_1.getCoachGroups);
 router.get('/:groupId/members', authMiddleware_1.protect, groupController_1.getGroupMembersById);
+// ✅ Export all members' runs with names
+router.get("/:groupName/export", authMiddleware_1.protect, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { groupName } = req.params;
+        // Find the group by name
+        const group = yield Group_1.default.findOne({ name: groupName }).populate("members", "userName emailAdd contactNum address");
+        if (!group) {
+            return res.status(404).json({ message: "Group not found" });
+        }
+        const memberIds = group.members.map((m) => m._id);
+        // Fetch all runs of group members
+        const runs = yield Run_1.default.find({ user: { $in: memberIds } })
+            .populate("user", "userName emailAdd contactNum address")
+            .sort({ createdAt: -1 });
+        if (!runs.length) {
+            return res.status(404).json({ message: "No runs found for this group" });
+        }
+        // CSV fields (include member info + run info)
+        const fields = [
+            { label: "Name", value: "user.userName" },
+            { label: "Email", value: "user.emailAdd" },
+            { label: "Contact", value: "user.contactNum" },
+            { label: "Address", value: "user.address" },
+            { label: "Distance (m)", value: "distance" },
+            { label: "Duration (s)", value: "duration" },
+            { label: "Pace (min/km)", value: "pace" },
+            { label: "Location", value: "location" },
+            { label: "Date", value: "createdAt" },
+        ];
+        const json2csvParser = new json2csv_1.Parser({ fields });
+        const csv = json2csvParser.parse(runs);
+        // Send CSV as file download
+        res.header("Content-Type", "text/csv");
+        res.attachment(`${groupName}_runs.csv`);
+        return res.send(csv);
+    }
+    catch (error) {
+        console.error("Export Group Runs Error:", error);
+        res.status(500).json({ message: error.message || "Server error" });
+    }
+}));
 exports.default = router;

@@ -35,47 +35,45 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const runSchema = new mongoose_1.Schema({
-    user: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
+    user: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
     distance: {
         type: Number,
         required: true,
-        min: [10, 'Distance must be at least 10 meters'], // Updated minimum to 10 meters
+        min: [10, "Distance must be at least 10 meters"],
         validate: {
             validator: function (v) {
                 return v >= 10;
             },
-            message: 'Distance must be at least 10 meters'
-        }
-    }, // Distance in meters
+            message: "Distance must be at least 10 meters",
+        },
+    },
     duration: {
         type: Number,
         required: true,
-        min: [0.01, 'Duration must be greater than 0'],
+        min: [0.01, "Duration must be greater than 0"],
         validate: {
             validator: function (v) {
                 return v > 0;
             },
-            message: 'Duration must be greater than 0'
-        }
-    }, // Duration in minutes
+            message: "Duration must be greater than 0",
+        },
+    },
     date: { type: Date, default: Date.now },
     pace: {
         type: Number,
         validate: {
             validator: function (v) {
-                return !v || (v >= 0.5 && v <= 15); // Realistic running pace range
+                return !v || (v >= 0.5 && v <= 15); // Realistic range
             },
-            message: 'Pace must be between 0.5 and 15 km/h for realistic running'
-        }
-    }, // Pace in km/h
+            message: "Pace must be between 0.5 and 15 km/h",
+        },
+    },
     location: {
         type: String,
-        maxlength: [500, 'Location string cannot exceed 500 characters']
-    }, // Location name in format "Start → End"
-}, {
-    timestamps: true,
-});
-// Add index for better query performance
+        maxlength: [500, "Location string cannot exceed 500 characters"],
+    },
+}, { timestamps: true });
+// Index for query performance
 runSchema.index({ user: 1, date: -1 });
-const Run = mongoose_1.default.model('Run', runSchema);
+const Run = mongoose_1.default.model("Run", runSchema);
 exports.default = Run;

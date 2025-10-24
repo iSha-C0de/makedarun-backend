@@ -28,6 +28,9 @@ app.use('/api/audit', auditRoutes_1.default); // Your audit tracking
 app.use('/api/groups', groupRoutes_1.default); // Group create, join, edit, etc.
 app.use('/api/runs', runRoutes_1.default); // Run routes
 app.use('/api/coach', coachRoutes_1.default);
+app.get('/', (req, res) => {
+    res.send('MakeDaRun Backend is live 🏃‍♂️');
+});
 // Error handling middleware (must come AFTER routes)
 app.use(errorMiddleware_1.notFound); // Handles 404s for unknown routes
 app.use(errorMiddleware_1.errorHandler); // Handles thrown errors and returns JSON
