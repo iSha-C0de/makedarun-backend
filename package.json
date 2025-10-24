@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
 "scripts": {
-  "dev": "ts-node-dev server.ts",
-  "build": "tsc",
-  "start": "node dist/server.js"
+  "build": "expo export:web",
+  "start": "expo start --web"
 },
   "keywords": [],
   "author": "",

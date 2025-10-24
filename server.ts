@@ -13,6 +13,7 @@ import coachRoutes from './src/routes/coachRoutes';
 
 // Middleware imports
 import { notFound, errorHandler } from './src/middleware/errorMiddleware';
+import journalRoutes from './src/routes/journalRoutes';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/runs', runRoutes);
 app.use('/api/coach', coachRoutes);
+app.use('/api/journal', journalRoutes); 
 
 // Root route
 app.get('/', (req, res) => {

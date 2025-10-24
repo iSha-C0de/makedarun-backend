@@ -5,6 +5,7 @@ import User, { UserDocument } from '../models/User';
 import { protect } from '../middleware/authMiddleware';
 import { AuthenticatedRequest } from '../types/express';
 import { getCoachGroups, getGroupMembersById } from '../controllers/groupController';
+import { Parser } from 'json2csv';
 
 const router = express.Router();
 
@@ -254,6 +255,52 @@ router.post('/leave', protect, async (req: AuthenticatedRequest, res) => {
 router.get('/coach/groups', protect, getCoachGroups);
 router.get('/:groupId/members', protect, getGroupMembersById);
 
+// ✅ Export all members' runs with names
+router.get("/:groupName/export", protect, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { groupName } = req.params;
 
+    // Find the group by name
+    const group = await Group.findOne({ name: groupName }).populate("members", "userName emailAdd contactNum address");
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const memberIds = group.members.map((m: any) => m._id);
+
+    // Fetch all runs of group members
+    const runs = await Run.find({ user: { $in: memberIds } })
+      .populate("user", "userName emailAdd contactNum address")
+      .sort({ createdAt: -1 });
+
+    if (!runs.length) {
+      return res.status(404).json({ message: "No runs found for this group" });
+    }
+
+    // CSV fields (include member info + run info)
+    const fields = [
+      { label: "Name", value: "user.userName" },
+      { label: "Email", value: "user.emailAdd" },
+      { label: "Contact", value: "user.contactNum" },
+      { label: "Address", value: "user.address" },
+      { label: "Distance (m)", value: "distance" },
+      { label: "Duration (s)", value: "duration" },
+      { label: "Pace (min/km)", value: "pace" },
+      { label: "Location", value: "location" },
+      { label: "Date", value: "createdAt" },
+    ];
+
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(runs);
+
+    // Send CSV as file download
+    res.header("Content-Type", "text/csv");
+    res.attachment(`${groupName}_runs.csv`);
+    return res.send(csv);
+  } catch (error: any) {
+    console.error("Export Group Runs Error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+});
 
 export default router;
